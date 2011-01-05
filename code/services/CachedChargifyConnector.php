@@ -29,6 +29,7 @@ class CachedChargifyConnector extends ChargifyConnector {
 
 		$useCache = (
 			!isset($_REQUEST['flush'])
+			&& $method == 'GET'
 			&& file_exists($cache)
 			&& filemtime($cache) + $this->getCacheExpiry() > time()
 		);
