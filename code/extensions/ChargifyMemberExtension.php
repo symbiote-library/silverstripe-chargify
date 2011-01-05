@@ -12,6 +12,32 @@ class ChargifyMemberExtension extends DataObjectDecorator {
 		));
 	}
 
+	public function onBeforeWrite() {
+		if (!$this->owner->ChargifyID) return;
+
+		$changed = array_keys($this->owner->getChangedFields());
+		$push    = array('Email', 'FirstName', 'Surname');
+
+		if (array_intersect($push, $changed)) {
+			$connection = ChargifyService::instance()->getConnector();
+			$reference  = $this->owner->ID;
+
+			try {
+				$customer = $connection->getCustomerByReferenceID($reference);
+			} catch(ChargifyNotFoundException $e) {
+				$this->owner->ChargifyID = null;
+			}
+
+			$customer->email      = $this->owner->Email;
+			$customer->first_name = $this->owner->FirstName;
+			$customer->last_name  = $this->owner->Surname;
+
+			try {
+				$connection->updateCustomer($customer);
+			} catch(ChargifyValidationException $e) {  }
+		}
+	}
+
 	public function onAfterWrite() {
 		if (!$this->owner->ChargifyID) {
 			$valid = (
