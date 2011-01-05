@@ -1,0 +1,8 @@
+--- 
+repository_url: https://github.com/jforrest/Chargify-PHP-Client.git
+lock: false
+repository_class: Piston::Git::Repository
+format: 1
+handler: 
+  commit: 636c0e7a5d15507ec4f0a79677a9ab7edd5b6ae0
+  branch: master
