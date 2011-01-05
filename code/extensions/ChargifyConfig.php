@@ -38,6 +38,17 @@ class ChargifyConfig extends DataObjectDecorator {
 	/**
 	 * @return string
 	 */
+	public function get_shared_key() {
+		if (defined('CHARGIFY_SHARED_KEY')) {
+			return CHARGIFY_SHARED_KEY;
+		} else {
+			return SiteConfig::current_site_config()->ChargifySharedKey;
+		}
+	}
+
+	/**
+	 * @return string
+	 */
 	public function get_currency() {
 		if (defined('CHARGIFY_CURRENCY')) {
 			return CHARGIFY_CURRENCY;
@@ -48,15 +59,17 @@ class ChargifyConfig extends DataObjectDecorator {
 
 	public function extraStatics() {
 		return array('db' => array(
-			'ChargifyDomain'   => 'Varchar(100)',
-			'ChargifyApiKey'   => 'Varchar(20)',
-			'ChargifyCurrency' => 'Varchar(3)'
+			'ChargifyDomain'    => 'Varchar(100)',
+			'ChargifyApiKey'    => 'Varchar(20)',
+			'ChargifySharedKey' => 'Varchar(20)',
+			'ChargifyCurrency'  => 'Varchar(3)'
 		));
 	}
 
 	public function updateCMSFields($fields) {
 		$hasDomain = defined('CHARGIFY_DOMAIN');
 		$hasKey    = defined('CHARGIFY_API_KEY');
+		$hasShared = defined('CHARGIFY_SHARED_KEY');
 		$hasCurr   = defined('CHARGIFY_CURRENCY');
 
 		if (!$hasDomain) $fields->addFieldToTab('Root.Chargify', new TextField(
@@ -65,6 +78,10 @@ class ChargifyConfig extends DataObjectDecorator {
 
 		if (!$hasKey) $fields->addFieldToTab('Root.Chargify', new TextField(
 			'ChargifyApiKey', 'Chargify API Key'
+		));
+
+		if (!$hasShared) $fields->addFieldToTab('Root.Chargify', new TextField(
+			'ChargifySharedKey', 'Chargify Site Shared Key'
 		));
 
 		if (!$hasCurr) $fields->addFieldToTab('Root.Chargify', new TextField(
