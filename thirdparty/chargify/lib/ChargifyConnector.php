@@ -44,7 +44,7 @@ class ChargifyConnector
 		$this->password = 'x';
 	}
   
-	private function sendRequest($uri, $format = 'XML', $method = 'GET', $data = '') {
+	protected function sendRequest($uri, $format = 'XML', $method = 'GET', $data = '') {
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_URL, "https://" . $this->active_domain . ".chargify.com" . $uri);
