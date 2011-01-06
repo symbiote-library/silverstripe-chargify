@@ -8,9 +8,14 @@
 class ChargifyGroupExtension extends DataObjectDecorator {
 
 	public function extraStatics() {
-		return array('db' => array(
-			'ChargifyProductID' => 'Int'
-		));
+		return array(
+			'db' => array(
+				'ChargifyProductID' => 'Int'
+			),
+			'many_many_extraFields' => array(
+				'Members' => array('Chargify' => 'Boolean')
+			)
+		);
 	}
 
 	public function updateCMSFields($fields) {
