@@ -23,9 +23,15 @@ class ChargifyGroupExtension extends DataObjectDecorator {
 		$products  = array();
 
 		foreach ($connector->getAllProducts() as $product) {
-			$products[$product->id] = sprintf(
-				'%s: %s', $product->name, $product->product_family->name
-			);
+			$id     = $product->id;
+			$family = $product->product_family->name;
+			$name   = $product->name;
+
+			if (!array_key_exists($family, $products)) {
+				$products[$family] = array();
+			}
+
+			$products[$family][$id] = "($family) $name";
 		}
 
 		$fields->addFieldsToTab('Root.Chargify', array(
@@ -33,7 +39,8 @@ class ChargifyGroupExtension extends DataObjectDecorator {
 			new LiteralField('ChargifyNote', '<p>If you select a Chargify '  .
 				'product below, then any members who purchase that product ' .
 				'will be added to this group.</p>'),
-			new DropdownField('ChargifyProductID', '', $products, null, null, true)
+			new GroupedDropdownField('ChargifyProductID',
+				'', $products, null, null, true)
 		));
 	}
 
