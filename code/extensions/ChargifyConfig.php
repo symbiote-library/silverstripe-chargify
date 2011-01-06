@@ -87,6 +87,19 @@ class ChargifyConfig extends DataObjectDecorator {
 		if (!$hasCurr) $fields->addFieldToTab('Root.Chargify', new TextField(
 			'ChargifyCurrency', 'Chargify Currency'
 		));
+
+		$webhook = Director::absoluteURL('chargify/webhook');
+
+		$fields->addFieldToTab('Root.Chargify', new HeaderField(
+			'ChargifyWebhooksHeader', 'Chargify Webhooks'
+		));
+		$fields->addFieldToTab('Root.Chargify', new LiteralField(
+			'ChargifyWebhookNote', sprintf('<p>Please enable webhooks on your ' .
+			'chargify account for the following url: "%s".</p><p>At least '      .
+			'the following events must be enabled: "Signup Success", '          .
+			'"Subscription State Change", and "Subscription Product Change"'    .
+			'.</p>', $webhook)
+		));
 	}
 
 }
