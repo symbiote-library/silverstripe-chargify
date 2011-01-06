@@ -26,6 +26,7 @@ class ChargifyMemberExtension extends DataObjectDecorator {
 				$customer = $connection->getCustomerByReferenceID($reference);
 			} catch(ChargifyNotFoundException $e) {
 				$this->owner->ChargifyID = null;
+				return;
 			}
 
 			$customer->email      = $this->owner->Email;
