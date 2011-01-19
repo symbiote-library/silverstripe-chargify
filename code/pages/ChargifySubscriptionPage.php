@@ -25,4 +25,15 @@ class ChargifySubscriptionPage extends Page {
 }
 
 class ChargifySubscriptionPage_Controller extends Page_Controller {
+
+	public function init() {
+		parent::init();
+
+		if (!Member::currentUserID()) {
+			return Security::permissionFailure($this, array(
+				'default' => 'You must be logged in to manage your subscription.'
+			));
+		}
+	}
+
 }
