@@ -1,0 +1,13 @@
+.ChargifyProductSetField .chargifyLink { float: right; }
+.ChargifyProductSetField h4 { margin-top: 10px; }
+.ChargifyProductSetField table { margin-top: 5px; width: 100%; border-collapse: collapse; border: 2px solid #DDD; }
+.ChargifyProductSetField thead { background: #DDD; text-align: left; }
+.ChargifyProductSetField th,
+.ChargifyProductSetField td { padding: 4px; border-right: 1px solid #DDD; }
+.ChargifyProductSetField th.active { width: 16px; }
+.ChargifyProductSetField th.price { width: 200px; }
+.ChargifyProductSetField th.groups { width: 200px; }
+.ChargifyProductSetField tbody tr { border-bottom: 1px solid #DDD;  }
+.ChargifyProductSetField table h4 { margin: 0; }
+.ChargifyProductSetField table select,
+.ChargifyProductSetField table select option { font-size: 12px; }
