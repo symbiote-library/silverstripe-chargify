@@ -13,7 +13,10 @@ class ChargifyGroupExtension extends DataObjectDecorator {
 				'ChargifyProductID' => 'Int'
 			),
 			'many_many_extraFields' => array(
-				'Members' => array('Chargify' => 'Boolean')
+				'Members' => array(
+					'Chargify'       => 'Boolean',
+					'SubscriptionID' => 'Int'
+				)
 			)
 		);
 	}

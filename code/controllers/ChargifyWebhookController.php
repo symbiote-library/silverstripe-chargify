@@ -26,6 +26,7 @@ class ChargifyWebhookController extends Controller {
 		// Handle a new subscription being created.
 		if ($event == 'signup_success') {
 			$id     = $payload['subscription']['customer']['reference'];
+			$sub    = $payload['subscription']['id'];
 			$email  = $payload['subscription']['customer']['email'];
 			$prod   = $payload['subscription']['product']['id'];
 
@@ -35,12 +36,13 @@ class ChargifyWebhookController extends Controller {
 				return $this->httpError(404, 'Member could not be found.');
 			}
 
-			$this->subscribeMember($prod, $member);
+			$this->subscribeMember($prod, $sub, $member);
 		}
 
 		// Handle subscription upgrades or downgrades.
 		if ($event == 'subscription_product_change') {
 			$id    = $payload['subscription']['customer']['reference'];
+			$sub   = $payload['subscription']['id'];
 			$email = $payload['subscription']['customer']['email'];
 			$prev  = $payload['previous_product']['id'];
 			$curr  = $payload['subscription']['product']['id'];
@@ -52,7 +54,7 @@ class ChargifyWebhookController extends Controller {
 			}
 
 			$this->unsubscribeMember($prev, $member);
-			$this->subscribeMember($curr, $member);
+			$this->subscribeMember($curr, $sub, $member);
 		}
 
 		// Handle subscriptions ending.
@@ -80,15 +82,19 @@ class ChargifyWebhookController extends Controller {
 	 * Adds a member to the groups linked to a Chargify product.
 	 *
 	 * @param int $product
+	 * @param int $subscription
 	 * @param Member $member
 	 */
-	protected function subscribeMember($product, Member $member) {
+	protected function subscribeMember($product, $subscription, Member $member) {
 		$groups = DataObject::get('Group', sprintf(
 			'"ChargifyProductID" = %d', $product
 		));
 
 		if ($groups) foreach ($groups as $group) {
-			$member->Groups()->add($group, array('Chargify' => true));
+			$member->Groups()->add($group, array(
+				'Chargify'       => true,
+				'SubscriptionID' => $subscription
+			));
 		}
 	}
 
