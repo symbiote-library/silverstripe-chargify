@@ -13,6 +13,7 @@
 			<p id="CreditCard">
 				Your credit card is on file.
 				<a href="$Link(creditcard)" class="creditCard" title="Credit Card Details">Show card details.</a>
+				<a href="$UpdateBillingLink">Update Billing Details.</a>
 			</p>
 		</div>
 	<% end_if %>

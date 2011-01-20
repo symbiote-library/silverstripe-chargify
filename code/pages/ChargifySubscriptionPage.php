@@ -87,4 +87,17 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		}
 	}
 
+	/**
+	 * @return string
+	 */
+	public function UpdateBillingLink() {
+		if (!$sub = $this->getChargifySubscription()) return;
+
+		$base  = ChargifyConfig::get_url();
+		$key   = ChargifyConfig::get_shared_key();
+		$token = substr(sha1("update_payment--$sub->id--$key"), 0, 10);
+
+		return Controller::join_links($base, 'update_payment', $sub->id, $token);
+	}
+
 }
