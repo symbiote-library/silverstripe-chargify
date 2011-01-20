@@ -27,7 +27,8 @@ class ChargifySubscriptionPage extends Page {
 class ChargifySubscriptionPage_Controller extends Page_Controller {
 
 	public static $allowed_actions = array(
-		'creditcard'
+		'creditcard',
+		'transactions'
 	);
 
 	public function init() {
@@ -53,6 +54,47 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 			'Number'    => $card->masked_card_number,
 			'ExpMonth'  => $card->expiration_month,
 			'ExpYear'   => $card->expiration_year
+		);
+	}
+
+	/**
+	 * Lists all transactions for the subscription.
+	 *
+	 * @return array
+	 */
+	public function transactions() {
+		if (!$subscription = $this->getChargifySubscription()) {
+			return $this->httpError(404);
+		}
+
+		$set   = new DataObjectSet();
+		$conn  = ChargifyService::instance()->getConnector();
+		$curr  = ChargifyConfig::get_currency();
+		$trans = $conn->getTransactionsBySubscriptionID($subscription->id);
+
+		foreach ($trans as $transaction) {
+			$amount = DBField::create('Money', array(
+				'Amount'   => ($transaction->amount_in_cents / 100),
+				'Currency' => $curr
+			));
+
+			$balance = DBField::create('Money', array(
+				'Amount'   => ($transaction->ending_balance_in_cents / 100),
+				'Currency' => $curr
+			));
+
+			$set->push(new ArrayData(array(
+				'ID'      => $transaction->id,
+				'Type'    => $transaction->type,
+				'Date'    => DBField::create('Date', $transaction->created_at),
+				'Amount'  => $amount,
+				'Balance' => $balance,
+				'Success' => (bool) $transaction->success
+			)));
+		}
+
+		return array(
+			'Transactions' => $set
 		);
 	}
 

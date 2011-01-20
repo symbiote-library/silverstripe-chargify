@@ -1,5 +1,5 @@
 ;(function($) {
-	$('a.creditCard').click(function() {
+	$('a.chargifyDialog').click(function() {
 		var anchor = $(this);
 		var text   = anchor.text();
 		var href   = anchor.text('Loading...').attr('href');
@@ -9,7 +9,9 @@
 			dialog.dialog({
 				title: anchor.attr('title'),
 				modal: true,
-				resizable: false
+				resizable: false,
+				width: 'auto',
+				height: 'auto'
 			});
 			anchor.text(text);
 		});
