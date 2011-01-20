@@ -22,7 +22,7 @@
 				<% control Children %>
 					<tr>
 						<td class="active">$ActiveField.Field</td>
-						<td class="name"><h4><a href="$ChargifyLink" target="_blank">$Title</a></h4></td>
+						<td class="name"><h4><a href="$ChargifyLink" target="_blank">$Name</a></h4></td>
 						<td class="price">
 							$Price.Nice <span>every $Interval {$IntervalUnit}(s)</span><br>
 							<% if InitialCharge %>$InitialCharge.Nice<% else %>No<% end_if %> <span>setup fee</span><br>
