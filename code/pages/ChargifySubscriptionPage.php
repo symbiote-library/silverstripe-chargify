@@ -26,6 +26,10 @@ class ChargifySubscriptionPage extends Page {
 
 class ChargifySubscriptionPage_Controller extends Page_Controller {
 
+	public static $allowed_actions = array(
+		'creditcard'
+	);
+
 	public function init() {
 		parent::init();
 
@@ -34,6 +38,22 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 				'default' => 'You must be logged in to manage your subscription.'
 			));
 		}
+	}
+
+	public function creditcard() {
+		if (!$subscription = $this->getChargifySubscription()) {
+			return $this->httpError(404);
+		}
+
+		$card = $subscription->credit_card;
+
+		return array(
+			'FirstName' => $card->first_name,
+			'LastName'  => $card->last_name,
+			'Number'    => $card->masked_card_number,
+			'ExpMonth'  => $card->expiration_month,
+			'ExpYear'   => $card->expiration_year
+		);
 	}
 
 	/**
