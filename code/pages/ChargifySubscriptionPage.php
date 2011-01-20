@@ -36,4 +36,26 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		}
 	}
 
+	/**
+	 * If the current member has a subscription to one of the products attached
+	 * to this page, return it.
+	 *
+	 * @return ChargifySubscription
+	 */
+	public function getChargifySubscription() {
+		if (!$member = Member::currentUser()) return;
+
+		$prods  = implode(', ', $this->Products()->map('ID', 'ProductID'));
+		$filter = sprintf(
+			'"ChargifyProductID" IN (%s) AND "Group_Members"."Chargify" = 1',
+			$prods
+		);
+
+		$group = $member->getManyManyComponents('Groups', $filter, null, null, 1);
+		if (!$group = $group->First()) return;
+
+		$conn = ChargifyService::instance()->getConnector();
+		return $conn->getSubscriptionsByID($group->SubscriptionID);
+	}
+
 }
