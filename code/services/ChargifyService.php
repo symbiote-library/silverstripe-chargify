@@ -53,6 +53,7 @@ class ChargifyService {
 		return new ArrayData(array(
 			'Name'              => $product->name,
 			'Family'            => $product->product_family->name,
+			'Description'       => $product->description,
 			'ChargifyLink'      => $link,
 			'Price'             => $price,
 			'Interval'          => $product->interval,
