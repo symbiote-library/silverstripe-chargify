@@ -133,7 +133,13 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		if (!$group = $group->First()) return;
 
 		$conn = ChargifyService::instance()->getConnector();
-		return $conn->getSubscriptionsByID($group->SubscriptionID);
+		$sub  = $conn->getSubscriptionsByID($group->SubscriptionID);
+
+		if (in_array($sub->state, array('canceled', 'expired', 'suspended'))) {
+			return false;
+		}
+
+		return $sub;
 	}
 
 	/**
