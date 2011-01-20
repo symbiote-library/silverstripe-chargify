@@ -7,6 +7,9 @@
 <div id="Content" class="typography">
 	<% if ChargifySubscription %>
 		<div id="PaymentDetails">
+			<p id="NextBilling">
+				Next billing date $NextBillingDate.Nice ($NextBillingDate.Ago)
+			</p>
 			<p id="CreditCard">
 				Your credit card is on file.
 				<a href="$Link(creditcard)" class="creditCard" title="Credit Card Details">Show card details.</a>

@@ -78,4 +78,13 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		return $conn->getSubscriptionsByID($group->SubscriptionID);
 	}
 
+	/**
+	 * @return Date
+	 */
+	public function NextBillingDate() {
+		if ($sub = $this->getChargifySubscription()) {
+			return DBField::create('Date', $sub->next_assessment_at);
+		}
+	}
+
 }
