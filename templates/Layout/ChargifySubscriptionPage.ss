@@ -5,6 +5,8 @@
 <% require javascript(chargify/javascript/ChargifySubscriptionPage.js) %>
 
 <div id="Content" class="typography">
+	<h2>$Title</h2>
+
 	<% if ChargifySubscription %>
 		<div id="PaymentDetails">
 			<p id="NextBilling">
