@@ -53,13 +53,14 @@ class ChargifyWebhookController extends Controller {
 				return $this->httpError(404, 'Member could not be found.');
 			}
 
-			$this->unsubscribeMember($prev, $member);
+			$this->unsubscribeMember($prev, $sub, $member);
 			$this->subscribeMember($curr, $sub, $member);
 		}
 
 		// Handle subscriptions ending.
 		if ($event == 'subscription_state_change') {
 			$id     = $payload['subscription']['customer']['reference'];
+			$sub    = $payload['subscription']['id'];
 			$email  = $payload['subscription']['customer']['email'];
 			$prod   = $payload['subscription']['product']['id'];
 			$state  = $payload['subscription']['state'];
@@ -71,7 +72,7 @@ class ChargifyWebhookController extends Controller {
 					return $this->httpError(404, 'Member could not be found.');
 				}
 
-				$this->unsubscribeMember($prod, $member);
+				$this->unsubscribeMember($prod, $sub, $member);
 			}
 		}
 
@@ -102,12 +103,15 @@ class ChargifyWebhookController extends Controller {
 	 * Removes a member from the groups linked to a Chargify product.
 	 *
 	 * @param int $product
+	 * @param int $subscription
 	 * @param Member $member
 	 */
-	protected function unsubscribeMember($product, Member $member) {
+	protected function unsubscribeMember($product, $subscription, Member $member) {
 		$groups = $member->getManyManyComponents('Groups', sprintf(
-			'"ChargifyProductID" = %d AND "Group_Members"."Chargify" = 1',
-			$product
+			'"ChargifyProductID" = %d ' .
+			'AND "Group_Members"."Chargify" = 1 ' .
+			'AND "Group_Members"."SubscriptionID" = %d',
+			$product, $subscription
 		));
 
 		if (count($groups)) {
