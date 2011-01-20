@@ -28,7 +28,9 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 
 	public static $allowed_actions = array(
 		'creditcard',
-		'transactions'
+		'transactions',
+		'upgrade',
+		'subscribe'
 	);
 
 	public function init() {
@@ -99,6 +101,20 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 	}
 
 	/**
+	 * @todo
+	 */
+	public function upgrade() {
+		return '';
+	}
+
+	/**
+	 * @todo
+	 */
+	public function subscribe() {
+		return '';
+	}
+
+	/**
 	 * If the current member has a subscription to one of the products attached
 	 * to this page, return it.
 	 *
@@ -107,7 +123,7 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 	public function getChargifySubscription() {
 		if (!$member = Member::currentUser()) return;
 
-		$prods  = implode(', ', $this->Products()->map('ID', 'ProductID'));
+		$prods  = implode(', ', $this->data()->Products()->map('ID', 'ProductID'));
 		$filter = sprintf(
 			'"ChargifyProductID" IN (%s) AND "Group_Members"."Chargify" = 1',
 			$prods
@@ -118,6 +134,53 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 
 		$conn = ChargifyService::instance()->getConnector();
 		return $conn->getSubscriptionsByID($group->SubscriptionID);
+	}
+
+	/**
+	 * @return DataObjectSet
+	 */
+	public function Products() {
+		$products = $this->data()->Products();
+		$service  = ChargifyService::instance();
+		$conn     = $service->getConnector();
+		$sub      = $this->getChargifySubscription();
+		$result   = new DataObjectSet();
+
+		if (!count($products)) return;
+
+		foreach ($products as $link) {
+			if (!$product = $conn->getProductByID($link->ProductID)) {
+				continue;
+			}
+
+			$data = $service->getCastedProductDetails($product);
+
+			if ($sub) {
+				if ($sub->product->id == $product->id) {
+					$data->setField('Active', true);
+				} else {
+					$link = Controller::join_links(
+						$this->Link(), 'upgrade', $product->id
+					);
+					$link = SecurityToken::inst()->addToUrl($link);
+
+					$data->setField('ActionTitle', 'Change subscription');
+					$data->setField('ActionLink', $link);
+				}
+			} else {
+				$link = Controller::join_links(
+					$this->Link(), 'subscribe', $product->id
+				);
+				$link = SecurityToken::inst()->addToUrl($link);
+
+				$data->setField('ActionTitle', 'Subscribe');
+				$data->setField('ActionLink', $link);
+			}
+
+			$result->push($data);
+		}
+
+		return $result;
 	}
 
 	/**
