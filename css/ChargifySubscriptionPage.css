@@ -1,0 +1,6 @@
+#PaymentDetails { padding: 5px 0; border-bottom: 1px solid #CCC; }
+#CreditCard { font-weight: bold; font-size: 13px;
+	background: url(../images/credit-card-24.png) no-repeat;
+	padding-left: 30px; line-height: 24px; }
+#CreditCardDetails dt { font-weight: bold; }
+#CreditCardDetails dd { margin-bottom: 5px; }
