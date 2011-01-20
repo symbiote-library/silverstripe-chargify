@@ -57,4 +57,17 @@
 			<% end_if %>
 		</tbody>
 	</table>
+
+	<% if ChargifySubscription %>
+		<div id="CancelSubscription">
+			<p class="showCancelLink">
+				<a href="#" class="showCancelLink cancel">Cancel Subscription</a>
+			</p>
+			<p class="cancelLink">
+				<strong>Are you sure you wish to cancel your subscription?</strong>
+				<a href="$CancelLink" class="cancelLink cancel">Yes, cancel my subscription.</a>
+				<a href="#" class="changedMind">No, I've changed my mind.</a>
+			</p>
+		</div>
+	<% end_if %>
 </div>

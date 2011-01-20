@@ -18,4 +18,25 @@
 
 		return false;
 	});
+
+	$('a.showCancelLink').click(function() {
+		$('p.showCancelLink').hide();
+		$('p.cancelLink').show();
+		return false;
+	});
+
+	$('a.changedMind').click(function() {
+		$('p.showCancelLink').show();
+		$('p.cancelLink').hide();
+		return false;
+	});
+
+	$('a.cancelLink').click(function() {
+		var msg = 'Are you sure you want to cancel your subscription? You ' +
+			'can re-active it later by visiting this page again.';
+
+		if (!confirm(msg)) {
+			return false;
+		}
+	});
 })(jQuery);

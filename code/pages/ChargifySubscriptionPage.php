@@ -30,7 +30,8 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		'creditcard',
 		'transactions',
 		'upgrade',
-		'subscribe'
+		'subscribe',
+		'cancel'
 	);
 
 	public function init() {
@@ -112,6 +113,32 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 	 */
 	public function subscribe() {
 		return '';
+	}
+
+	/**
+	 * Cancels the users current subscription.
+	 *
+	 * @return string
+	 */
+	public function cancel($request) {
+		if (!SecurityToken::inst()->checkRequest($request)) {
+			return $this->httpError(400);
+		}
+
+		if (!$subscription = $this->getChargifySubscription()) {
+			return $this->httpError(404);
+		}
+
+		$conn = ChargifyService::instance()->getConnector();
+		$conn->cancelSubscription($subscription->id, null);
+
+		$data = array(
+			'Title'   => 'Subscription Canceled',
+			'Content' => '<p>Your subscription has successfully been canceled.</p>'
+		);
+		return $this->customise($data)->renderWith(array(
+			'ChargifySubscriptionPage_cancel', 'Page'
+		));
 	}
 
 	/**
@@ -209,6 +236,13 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		$token = substr(sha1("update_payment--$sub->id--$key"), 0, 10);
 
 		return Controller::join_links($base, 'update_payment', $sub->id, $token);
+	}
+
+	/**
+	 * @return string
+	 */
+	public function CancelLink() {
+		return SecurityToken::inst()->addToUrl($this->Link('cancel'));
 	}
 
 }
