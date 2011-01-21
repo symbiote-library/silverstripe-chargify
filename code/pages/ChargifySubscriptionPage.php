@@ -30,7 +30,6 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		'creditcard',
 		'transactions',
 		'upgrade',
-		'subscribe',
 		'cancel'
 	);
 
@@ -102,17 +101,12 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 	}
 
 	/**
-	 * @todo
+	 * Changes the product the subscription is attached to.
+	 *
+	 * @return array
 	 */
 	public function upgrade() {
-		return '';
-	}
 
-	/**
-	 * @todo
-	 */
-	public function subscribe() {
-		return '';
 	}
 
 	/**
@@ -174,6 +168,7 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 	 */
 	public function Products() {
 		$products = $this->data()->Products();
+		$member   = Member::currentUser();
 		$service  = ChargifyService::instance();
 		$conn     = $service->getConnector();
 		$sub      = $this->getChargifySubscription();
@@ -202,9 +197,14 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 				}
 			} else {
 				$link = Controller::join_links(
-					$this->Link(), 'subscribe', $product->id
+					ChargifyConfig::get_url(),
+					'h', $product->id,
+					'subscriptions/new',
+					'?first_name=' . urlencode($member->FirstName),
+					'?last_name='  . urlencode($member->Surname),
+					'?email='      . urlencode($member->Email),
+					'?reference='  . urlencode("{$member->ID}-{$this->ID}")
 				);
-				$link = SecurityToken::inst()->addToUrl($link);
 
 				$data->setField('ActionTitle', 'Subscribe');
 				$data->setField('ActionLink', $link);
