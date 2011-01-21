@@ -18,9 +18,6 @@ class SyncChargifyMembersTask extends BuildTask {
 		$connector = ChargifyService::instance()->getConnector();
 		$connector->setCacheExpiry(-1);
 
-		// Get all the Member ID's we need to process.
-		$members = array_flip(DB::query('SELECT "ID" FROM "Member"')->column());
-
 		// Now loop through each page of API data until we reach the end.
 		for ($page = 1; ; $page++) {
 			if (!$customers = $connector->getAllCustomers($page)) {
@@ -29,34 +26,9 @@ class SyncChargifyMembersTask extends BuildTask {
 
 			foreach ($customers as $customer) {
 				if ($result = $this->processCustomer($customer, $connector)) {
-					if (array_key_exists($result['id'], $members)) {
-						unset($members[$result['id']]);
-						if ($result['updated']) $synced++;
-					}
+					if ($result['updated']) $synced++;
 				}
 			}
-		}
-
-		// Create a Chargify customer for any remaining Members that don't
-		// already have one.
-		if ($members) foreach (array_keys($members) as $id) {
-			$member   = DataObject::get_by_id('Member', $id);
-			$customer = new ChargifyCustomer();
-
-			$customer->email      = $member->Email;
-			$customer->first_name = $member->FirstName;
-			$customer->last_name  = $member->Surname;
-			$customer->reference  = $member->ID;
-
-			try {
-				$customer = $connector->createCustomer($customer);
-			} catch(ChargifyValidationException $e) {
-				continue;
-			}
-
-			$member->ChargifyID = $customer->id;
-			$member->write();
-			$created++;
 		}
 
 		echo "Created $created customers and synced $synced members.\n";
