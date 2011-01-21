@@ -127,8 +127,43 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 	 *
 	 * @return array
 	 */
-	public function upgrade() {
+	public function upgrade($request) {
+		if (!SecurityToken::inst()->checkRequest($request)) {
+			return $this->httpError(400);
+		}
 
+		if (!$subscription = $this->getChargifySubscription()) {
+			return $this->httpError(404);
+		}
+
+		$connector = ChargifyService::instance()->getConnector();
+		$product   = $request->param('ID');
+		$products  = $this->data()->Products()->map('ID', 'ProductID');
+
+		if (!in_array($product, $products)) {
+			return $this->httpError(404, 'Invalid product ID.');
+		}
+
+		$product = $connector->getProductByID($product);
+
+		if ($this->UpgradeType == 'Simple') {
+			$connector->updateSubscriptionProduct($subscription->id, $product);
+		} else {
+			$connector->updateSubscriptionProductProrated(
+				$subscription->id,
+				$product,
+				$this->UpgradeIncludeTrial,
+				$this->UpgradeInitialCharge
+			);
+		}
+
+		$data = array(
+			'Title'   => 'Subscription Updated',
+			'Content' => '<p>Your subscription has been updated.</p>'
+		);
+		return $this->customise($data)->renderWith(array(
+			'ChargifySubscriptionPage_cancel', 'Page'
+		));
 	}
 
 	/**
