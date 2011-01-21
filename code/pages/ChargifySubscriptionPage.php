@@ -220,8 +220,9 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		}
 
 		$conn = ChargifyService::instance()->getConnector();
-		$sub  = $conn->getSubscriptionsByID($group->SubscriptionID);
+		$conn->setCacheExpiry(60);
 
+		$sub  = $conn->getSubscriptionsByID($group->SubscriptionID);
 		if (in_array($sub->state, array('canceled', 'expired', 'suspended'))) {
 			return $this->subscription = false;
 		}
