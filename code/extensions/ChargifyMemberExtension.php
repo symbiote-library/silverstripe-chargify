@@ -7,48 +7,37 @@
 class ChargifyMemberExtension extends DataObjectDecorator {
 
 	public function extraStatics() {
-		return array('db' => array(
-			'ChargifyID' => 'Int'
+		return array('has_many' => array(
+			'ChargifyCustomers' => 'ChargifyCustomerLink'
 		));
 	}
 
 	public function onBeforeWrite() {
-		if (!$this->owner->ChargifyID) return;
+		if (!count($this->owner->ChargifyCustomers())) return;
 
 		$changed = array_keys($this->owner->getChangedFields());
 		$push    = array('Email', 'FirstName', 'Surname');
 
 		if (array_intersect($push, $changed)) {
-			$connection = ChargifyService::instance()->getConnector();
-			$reference  = $this->owner->ID;
+			$connector = ChargifyService::instance()->getConnector();
 
-			try {
-				$customer = $connection->getCustomerByReferenceID($reference);
-			} catch(ChargifyNotFoundException $e) {
-				$this->owner->ChargifyID = null;
-				return;
+			foreach ($this->owner->ChargifyCustomers() as $link) {
+				try {
+					$customer = $connector->getCustomerByID($link->CustomerID);
+				} catch(ChargifyNotFoundException $e) {
+					$link->delete();
+					continue;
+				}
+
+				$customer->email      = $this->owner->Email;
+				$customer->first_name = $this->owner->FirstName;
+				$customer->last_name  = $this->owner->Surname;
+
+				try {
+					$connection->updateCustomer($customer);
+				} catch(ChargifyValidationException $e) {  }
 			}
-
-			$customer->email      = $this->owner->Email;
-			$customer->first_name = $this->owner->FirstName;
-			$customer->last_name  = $this->owner->Surname;
-
-			try {
-				$connection->updateCustomer($customer);
-			} catch(ChargifyValidationException $e) {  }
 		}
-	}
-
-	public function updateCMSFields($fields) {
-		$fields->removeByName('ChargifyID');
-	}
-
-	public function updateMemberFormFields($fields) {
-		$fields->removeByName('ChargifyID');
-	}
-
-	public function updateFrontEndFields($fields) {
-		$fields->removeByName('ChargifyID');
 	}
 
 }
