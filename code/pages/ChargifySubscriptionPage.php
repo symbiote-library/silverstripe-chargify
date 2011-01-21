@@ -250,7 +250,7 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 
 			$data = $service->getCastedProductDetails($product);
 
-			if ($sub) {
+			if ($this->HasActiveSubscription()) {
 				if ($sub->product->id == $product->id) {
 					$data->setField('Active', true);
 				} else {
@@ -282,6 +282,19 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function HasActiveSubscription() {
+		if (!$subscription = $this->getChargifySubscription()) {
+			return false;
+		}
+
+		return !in_array(
+			$subscription->state, array('canceled', 'expired', 'suspended')
+		);
 	}
 
 	/**

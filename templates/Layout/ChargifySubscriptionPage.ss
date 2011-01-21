@@ -7,7 +7,7 @@
 <div id="Content" class="typography">
 	<h2>$Title</h2>
 
-	<% if ChargifySubscription %>
+	<% if HasActiveSubscription %>
 		<div id="PaymentDetails">
 			<p id="NextBilling">
 				Next billing date $NextBillingDate.Nice ($NextBillingDate.Ago).
@@ -58,7 +58,7 @@
 		</tbody>
 	</table>
 
-	<% if ChargifySubscription %>
+	<% if HasActiveSubscription %>
 		<div id="CancelSubscription">
 			<p class="showCancelLink">
 				<a href="#" class="showCancelLink cancel">Cancel Subscription</a>
