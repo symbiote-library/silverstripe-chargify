@@ -25,10 +25,11 @@ class ChargifyWebhookController extends Controller {
 
 		// Handle a new subscription being created.
 		if ($event == 'signup_success') {
-			$cust   = $payload['subscription']['customer']['id'];
-			$sub    = $payload['subscription']['id'];
-			$email  = $payload['subscription']['customer']['email'];
-			$prod   = $payload['subscription']['product']['id'];
+			$cust    = $payload['subscription']['customer']['id'];
+			$custref = $payload['subscription']['customer']['reference'];
+			$sub     = $payload['subscription']['id'];
+			$email   = $payload['subscription']['customer']['email'];
+			$prod    = $payload['subscription']['product']['id'];
 
 			$member = $this->getMember($cust);
 
@@ -36,16 +37,17 @@ class ChargifyWebhookController extends Controller {
 				return $this->httpError(404, 'Member could not be found.');
 			}
 
-			$this->subscribeMember($prod, $sub, $member);
+			$this->subscribeMember($prod, $sub, $custref, $member);
 		}
 
 		// Handle subscription upgrades or downgrades.
 		if ($event == 'subscription_product_change') {
-			$cust  = $payload['subscription']['customer']['id'];
-			$sub   = $payload['subscription']['id'];
-			$email = $payload['subscription']['customer']['email'];
-			$prev  = $payload['previous_product']['id'];
-			$curr  = $payload['subscription']['product']['id'];
+			$cust    = $payload['subscription']['customer']['id'];
+			$custref = $payload['subscription']['customer']['reference'];
+			$sub     = $payload['subscription']['id'];
+			$email   = $payload['subscription']['customer']['email'];
+			$prev    = $payload['previous_product']['id'];
+			$curr    = $payload['subscription']['product']['id'];
 
 			$member = $this->getMember($cust);
 
@@ -54,7 +56,7 @@ class ChargifyWebhookController extends Controller {
 			}
 
 			$this->unsubscribeMember($prev, $sub, $member);
-			$this->subscribeMember($curr, $sub, $member);
+			$this->subscribeMember($curr, $sub, $custref, $member);
 		}
 
 		// Handle subscriptions ending.
@@ -84,9 +86,10 @@ class ChargifyWebhookController extends Controller {
 	 *
 	 * @param int $product
 	 * @param int $subscription
+	 * @param string $custref
 	 * @param Member $member
 	 */
-	protected function subscribeMember($product, $subscription, Member $member) {
+	protected function subscribeMember($product, $subscription, $custref, Member $member) {
 		$groups = DataObject::get('Group', sprintf(
 			'"ChargifyProductID" = %d', $product
 		));
@@ -97,6 +100,12 @@ class ChargifyWebhookController extends Controller {
 				'SubscriptionID' => $subscription
 			));
 		}
+
+		$link = new ChargifySubscriptionLink();
+		$link->SubscriptionID = $subscription;
+		$link->MemberID       = $member->ID;
+		$link->PageID         = substr($custref, strpos($custref, '-') + 1);
+		$link->write();
 	}
 
 	/**

@@ -8,7 +8,8 @@ class ChargifyMemberExtension extends DataObjectDecorator {
 
 	public function extraStatics() {
 		return array('has_many' => array(
-			'ChargifyCustomers' => 'ChargifyCustomerLink'
+			'ChargifyCustomers'     => 'ChargifyCustomerLink',
+			'ChargifySubscriptions' => 'ChargifySubscriptionLink'
 		));
 	}
 

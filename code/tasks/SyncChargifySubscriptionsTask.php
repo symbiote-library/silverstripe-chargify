@@ -42,8 +42,9 @@ class SyncChargifySubscriptionsTask extends BuildTask {
 	 * @return string
 	 */
 	protected function processSubscription($subscription) {
-		$id    = $subscription->id;
-		$state = $subscription->state;
+		$id      = $subscription->id;
+		$state   = $subscription->state;
+		$custref = $subscription->customer->reference;
 
 		if (in_array($state, array('canceled', 'unpaid', 'expired'))) {
 			DB::query(sprintf(
@@ -74,6 +75,22 @@ class SyncChargifySubscriptionsTask extends BuildTask {
 					));
 					$result = 'subscribed';
 				}
+			}
+
+			$link = DataObject::get_one('ChargifySubscriptionLink', sprintf(
+				'"SubscriptionID" = %d', $id
+			));
+
+			if (!$link) {
+				$link = new ChargifySubscriptionLink();
+				$link->SubscriptionID = $id;
+				$link->MemberID = $member->ID;
+				$link->PageID = substr(
+					$custref, strpos($custref, '-') + 1
+				);
+				$link->write();
+
+				$result = true;
 			}
 
 			return $result;
