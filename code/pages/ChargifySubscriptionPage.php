@@ -251,6 +251,7 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 
 					$data->setField('ActionTitle', 'Change subscription');
 					$data->setField('ActionLink', $link);
+					$data->setField('ActionConfirm', true);
 				}
 			} else {
 				$link = Controller::join_links(

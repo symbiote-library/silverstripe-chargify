@@ -19,6 +19,10 @@
 		return false;
 	});
 
+	$('a.confirm').click(function() {
+		if (!confirm('Are you sure?')) return false;
+	});
+	
 	$('a.showCancelLink').click(function() {
 		$('p.showCancelLink').hide();
 		$('p.cancelLink').show();

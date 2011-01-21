@@ -45,7 +45,7 @@
 							<% if Active %>
 								<strong>Currently active</strong>
 							<% else %>
-								<a href="$ActionLink" class=button>$ActionTitle</a>
+								<a href="$ActionLink" class="button <% if ActionConfirm %>confirm<% end_if %>">$ActionTitle</a>
 							<% end_if %>
 						</td>
 					</tr>
