@@ -53,11 +53,12 @@ class SyncChargifySubscriptionsTask extends BuildTask {
 
 			return 'deleted';
 		} else {
-			$member = DataObject::get_one('Member', sprintf(
-				'"ChargifyID" = %d', $subscription->customer->id
+			$link = DataObject::get_one('ChargifyCustomerLink', sprintf(
+				'"CustomerID" = %d', $subscription->customer->id
 			));
 
-			if (!$member) return;
+			if (!$link) return;
+			$member = $link->Member();
 
 			$groups = DataObject::get('Group', sprintf(
 				'"ChargifyProductID" = %d', $subscription->product->id
