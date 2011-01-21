@@ -18,3 +18,4 @@
 #CancelSubscription a.cancel:hover { background: #FF7373; color: #FFF; }
 p.cancelLink { display: none; }
 p.cancelLink strong { margin-right: 10px; }
+#ReactivateSubscription { font-size: 14px; padding: 5px; margin: 10px 0 0 0; font-weight: bold; }

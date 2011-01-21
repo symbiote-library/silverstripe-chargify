@@ -134,13 +134,14 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 			return $this->httpError(400);
 		}
 
-		if (!$subscription = $this->getChargifySubscription()) {
+		if (!$this->HasActiveSubscription()) {
 			return $this->httpError(404);
 		}
 
-		$connector = ChargifyService::instance()->getConnector();
-		$product   = $request->param('ID');
-		$products  = $this->data()->Products()->map('ID', 'ProductID');
+		$subscription = $this->getChargifySubscription();
+		$connector    = ChargifyService::instance()->getConnector();
+		$product      = $request->param('ID');
+		$products     = $this->data()->Products()->map('ID', 'ProductID');
 
 		if (!in_array($product, $products)) {
 			return $this->httpError(404, 'Invalid product ID.');
@@ -178,9 +179,11 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 			return $this->httpError(400);
 		}
 
-		if (!$subscription = $this->getChargifySubscription()) {
+		if (!$this->HasActiveSubscription()) {
 			return $this->httpError(404);
 		}
+
+		$subscription = $this->getChargifySubscription();
 
 		$conn = ChargifyService::instance()->getConnector();
 		$conn->cancelSubscription($subscription->id, null);
@@ -207,25 +210,16 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 
 		if (!$member = Member::currentUser()) return $this->subscription = false;
 
-		$prods  = implode(', ', $this->data()->Products()->map('ID', 'ProductID'));
-		$filter = sprintf(
-			'"ChargifyProductID" IN (%s) AND "Group_Members"."Chargify" = 1',
-			$prods
-		);
+		$link = DataObject::get_one('ChargifySubscriptionLink', sprintf(
+			'"MemberID" = %d AND "PageID" = %d',
+			Member::currentUserID(), $this->ID
+		));
 
-		$group = $member->getManyManyComponents('Groups', $filter, null, null, 1);
-
-		if (!$group = $group->First()) {
-			return $this->subscription = false;
-		}
+		if (!$link) return $this->subscription = false;
 
 		$conn = ChargifyService::instance()->getConnector();
 		$conn->setCacheExpiry(60);
-
-		$sub  = $conn->getSubscriptionsByID($group->SubscriptionID);
-		if (in_array($sub->state, array('canceled', 'expired', 'suspended'))) {
-			return $this->subscription = false;
-		}
+		$sub = $conn->getSubscriptionsByID($link->SubscriptionID);
 
 		return $this->subscription = $sub;
 	}

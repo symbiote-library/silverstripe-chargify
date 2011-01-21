@@ -7,10 +7,12 @@
 <div id="Content" class="typography">
 	<h2>$Title</h2>
 
-	<% if HasActiveSubscription %>
+	<% if ChargifySubscription %>
 		<div id="PaymentDetails">
 			<p id="NextBilling">
-				Next billing date $NextBillingDate.Nice ($NextBillingDate.Ago).
+				<% if HasActiveSubscription %>
+					Next billing date $NextBillingDate.Nice ($NextBillingDate.Ago).
+				<% end_if %>
 				<a href="$Link(transactions)" class="chargifyDialog" title="Transaction History">Transaction history.</a>
 			</p>
 			<p id="CreditCard">
@@ -19,6 +21,16 @@
 				<a href="$UpdateBillingLink">Update Billing Details.</a>
 			</p>
 		</div>
+	<% end_if %>
+
+	<% if HasActiveSubscription %>
+	<% else %>
+		<% if ChargifySubscription %>
+			<p id="ReactivateSubscription" class="ui-state-highlight ui-corner-all">
+				Your subscription is currently canceled or suspended. You can
+				re-activate it below.
+			</p>
+		<% end_if %>
 	<% end_if %>
 
 	<table id="Products">
