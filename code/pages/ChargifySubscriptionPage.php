@@ -55,6 +55,8 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		'cancel'
 	);
 
+	protected $subscription;
+
 	public function init() {
 		parent::init();
 
@@ -199,7 +201,11 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 	 * @return ChargifySubscription
 	 */
 	public function getChargifySubscription() {
-		if (!$member = Member::currentUser()) return;
+		if ($this->subscription !== null) {
+			return $this->subscription;
+		}
+
+		if (!$member = Member::currentUser()) return $this->subscription = false;
 
 		$prods  = implode(', ', $this->data()->Products()->map('ID', 'ProductID'));
 		$filter = sprintf(
@@ -208,16 +214,19 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		);
 
 		$group = $member->getManyManyComponents('Groups', $filter, null, null, 1);
-		if (!$group = $group->First()) return;
+
+		if (!$group = $group->First()) {
+			return $this->subscription = false;
+		}
 
 		$conn = ChargifyService::instance()->getConnector();
 		$sub  = $conn->getSubscriptionsByID($group->SubscriptionID);
 
 		if (in_array($sub->state, array('canceled', 'expired', 'suspended'))) {
-			return false;
+			return $this->subscription = false;
 		}
 
-		return $sub;
+		return $this->subscription = $sub;
 	}
 
 	/**
