@@ -7,8 +7,18 @@
  */
 class ChargifySubscriptionPage extends Page {
 
+	public static $db = array(
+		'UpgradeType'          => 'Enum("Prorated, Simple", "Prorated")',
+		'UpgradeIncludeTrial'  => 'Boolean',
+		'UpgradeInitialCharge' => 'Boolean'
+	);
+
 	public static $has_many = array(
 		'Products' => 'ChargifyProductLink'
+	);
+
+	public static $defaults = array(
+		'UpgradeType' => 'Prorated'
 	);
 
 	public function getCMSFields() {
@@ -17,6 +27,18 @@ class ChargifySubscriptionPage extends Page {
 		$fields->addFieldToTab('Root.Content', new Tab('Subscriptions'), 'Metadata');
 		$fields->addFieldToTab('Root.Content.Subscriptions', new ChargifyProductSetField(
 			'Products', 'Available Subscription Types'
+		));
+
+		$fields->addFieldsToTab('Root.Content.Advanced', array(
+			new HeaderField('UpgradeHeader', 'Product Upgrades/Downgrades'),
+			new OptionSetField('UpgradeType', '', array(
+				'Prorated' => 'Do a prorated upgrade',
+				'Simple'   => 'Just change the product'
+			)),
+			new CheckboxField('UpgradeIncludeTrial',
+				'Include initial trial in prorated upgrade?'),
+			new CheckboxField('UpgradeInitialCharge',
+				'Include initial charges in prorated upgrade?')
 		));
 
 		return $fields;
