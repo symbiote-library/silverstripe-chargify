@@ -1,7 +1,6 @@
 <?php
 /**
- * Does a two way sync between the Chargify customer database and the Member
- * list, ensuring that each Member is linked to a customer.
+ * Links chargify customers with their corresponding member.
  *
  * @package silverstripe-chargify
  */
@@ -12,7 +11,7 @@ class SyncChargifyMembersTask extends BuildTask {
 		databases, so each Member is linked to a Chargify customer.';
 
 	public function run($request) {
-		$synced = $created = 0;
+		$synced = 0;
 
 		// Ensure we have an uncached connector.
 		$connector = ChargifyService::instance()->getConnector();
@@ -26,12 +25,12 @@ class SyncChargifyMembersTask extends BuildTask {
 
 			foreach ($customers as $customer) {
 				if ($result = $this->processCustomer($customer, $connector)) {
-					if ($result['updated']) $synced++;
+					$synced++;
 				}
 			}
 		}
 
-		echo "Created $created customers and synced $synced members.\n";
+		echo "Synced $synced members.\n";
 	}
 
 	/**
@@ -42,69 +41,69 @@ class SyncChargifyMembersTask extends BuildTask {
 	 * @return int
 	 */
 	protected function processCustomer($customer, $connector) {
-		$member = null;
+		$member  = null;
+		$updated = false;
 
-		// Attempt to find the member directly by reference ID.
-		if ($customer->reference) {
-			$member = DataObject::get_by_id('Member', $customer->reference);
+		// Attempt to find the member by ID. The reference is in the format
+		// {Member ID}-{Page ID}
+		if ($ref = $customer->reference) {
+			$id     = substr($ref, 0, strpos($ref, '-'));;
+			$member = DataObject::get_by_id('Member', $id);
+		} else {
+			return;
 		}
 
-		// Then try to look up the member by email.
-		if (!$member) {
-			$member = DataObject::get_one('Member', sprintf(
-				'Email = \'%s\'', Convert::raw2sql($customer->email)
-			));
+		if (!$member) return;
 
-			$member->ChargifyID = $customer->id;
-			$member->write();
+		// Check we have a product linking
+		$link = DataObject::get_one('ChargifyCustomerLink', sprintf(
+			'"CustomerID" = %d AND "MemberID" = %d', $customer->id, $member->ID
+		));
 
-			$customer->reference = $member->ID;
-			$connector->updateCustomer($customer);
+		if (!$link) {
+			$link = new ChargifyCustomerLink();
+			$link->CustomerID = $customer->id;
+			$link->MemberID   = $member->ID;
+			$link->write();
+
+			$updated = true;
 		}
 
-		// If we have a Member, ensure the details are the same across both
-		// systems. If we can't find a corresponding Member record then just
-		// ignore it.
-		if ($member) {
-			$fields = array(
-				'Email'     => 'email',
-				'FirstName' => 'first_name',
-				'Surname'   => 'last_name'
-			);
+		// If we have a Member, check if the details are the same. If they're
+		// different, and the silverstripe record is newer then push the changes.
+		$fields = array(
+			'Email'     => 'email',
+			'FirstName' => 'first_name',
+			'Surname'   => 'last_name'
+		);
 
-			$identical = true;
+		$identical = true;
 
-			foreach ($fields as $mField => $cField) {
-				if ($member->$mField != $customer->$cField) $identical = false;
-			}
+		foreach ($fields as $mField => $cField) {
+			if ($member->$mField != $customer->$cField) $identical = false;
+		}
 
-			// Update the most recently edited record.
-			if (!$identical) {
-				$mLast = strtotime($member->LastEdited);
-				$cLast = strtotime($customer->updated_at);
+		// Update the most recently edited record.
+		if (!$identical) {
+			$mLast = strtotime($member->LastEdited);
+			$cLast = strtotime($customer->updated_at);
 
-				if ($mLast > $cLast) {
-					$customer->email      = $member->Email;
-					$customer->first_name = $member->FirstName;
-					$customer->last_name  = $member->Surname;
+			if ($mLast > $cLast) {
+				$customer->email      = $member->Email;
+				$customer->first_name = $member->FirstName;
+				$customer->last_name  = $member->Surname;
 
-					try {
-						$customer = $connection->createCustomer($customer);
-					} catch(ChargifyValidationException $e) {
-						return;
-					}
-				} else {
-					$member->Email     = $customer->email;
-					$member->FirstName = $customer->first_name;
-					$member->Surname   = $customer->last_name;
-					$member->write();
+				try {
+					$connector->updateCustomer($customer);
+				} catch(ChargifyValidationException $e) {
+					return;
 				}
 
-				return array('id' => $member->ID, 'updated' => true);
+				$updated = true;
 			}
-
-			return array('id' => $member->ID, 'updated' => false);
 		}
+
+		return $updated;
 	}
 
 }
