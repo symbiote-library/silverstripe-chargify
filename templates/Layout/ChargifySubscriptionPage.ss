@@ -56,7 +56,7 @@
 						<td class="action">
 							<% if Active %>
 								<strong>Currently active</strong>
-							<% else %>
+							<% else_if ActionLink %>
 								<a href="$ActionLink" class="button <% if ActionConfirm %>confirm<% end_if %>">$ActionTitle</a>
 							<% end_if %>
 						</td>

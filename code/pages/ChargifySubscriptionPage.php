@@ -52,7 +52,8 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		'creditcard',
 		'transactions',
 		'upgrade',
-		'cancel'
+		'cancel',
+		'reactivate'
 	);
 
 	protected $subscription;
@@ -198,6 +199,34 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 	}
 
 	/**
+	 * Reactivates a dead subscription and optionally points it to a new product.
+	 */
+	public function reactivate($request) {
+		if (!SecurityToken::inst()->checkRequest($request)) {
+			return $this->httpError(400);
+		}
+
+		if ($this->HasActiveSubscription()) {
+			return $this->httpError(404);
+		}
+
+		if (!$subscription = $this->getChargifySubscription()) {
+			return $this->httpError(404);
+		}
+
+		$connector = ChargifyService::instance()->getConnector();
+		$connector->reactivateSubscription($subscription->id);
+
+		$data = array(
+			'Title'   => 'Subscription Re-activated',
+			'Content' => '<p>Your subscription has been re-activated.</p>'
+		);
+		return $this->customise($data)->renderWith(array(
+			'ChargifySubscriptionPage_cancel', 'Page'
+		));
+	}
+
+	/**
 	 * If the current member has a subscription to one of the products attached
 	 * to this page, return it.
 	 *
@@ -258,18 +287,28 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 					$data->setField('ActionConfirm', true);
 				}
 			} else {
-				$link = Controller::join_links(
-					ChargifyConfig::get_url(),
-					'h', $product->id,
-					'subscriptions/new',
-					'?first_name=' . urlencode($member->FirstName),
-					'?last_name='  . urlencode($member->Surname),
-					'?email='      . urlencode($member->Email),
-					'?reference='  . urlencode("{$member->ID}-{$this->ID}")
-				);
+				if ($sub) {
+					if ($sub->product->id == $product->id) {
+						$link = SecurityToken::inst()->addToUrl($this->Link('reactivate'));
 
-				$data->setField('ActionTitle', 'Subscribe');
-				$data->setField('ActionLink', $link);
+						$data->setField('ActionTitle', 'Re-activate');
+						$data->setField('ActionLink', $link);
+						$data->setField('ActionConfirm', true);
+					}
+				} else {
+					$link = Controller::join_links(
+						ChargifyConfig::get_url(),
+						'h', $product->id,
+						'subscriptions/new',
+						'?first_name=' . urlencode($member->FirstName),
+						'?last_name='  . urlencode($member->Surname),
+						'?email='      . urlencode($member->Email),
+						'?reference='  . urlencode("{$member->ID}-{$this->ID}")
+					);
+
+					$data->setField('ActionTitle', 'Subscribe');
+					$data->setField('ActionLink', $link);
+				}
 			}
 
 			$result->push($data);
