@@ -1,4 +1,4 @@
-<div id="CreditCardDetails">
+<div id="chargify-credit-card-details">
 	<dl>
 		<dt>Name:</dt>
 		<dd>$FirstName $LastName</dd>

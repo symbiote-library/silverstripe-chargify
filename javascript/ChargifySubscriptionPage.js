@@ -1,5 +1,5 @@
 ;(function($) {
-	$('a.chargifyDialog').click(function() {
+	$('a.chargify-dialog').click(function() {
 		var anchor = $(this);
 		var text   = anchor.text();
 		var href   = anchor.text('Loading...').attr('href');
@@ -7,11 +7,11 @@
 
 		dialog.load(href, function() {
 			dialog.dialog({
-				title: anchor.attr('title'),
-				modal: true,
+				title:     anchor.attr('title'),
+				modal:     true,
 				resizable: false,
-				width: 'auto',
-				height: 'auto'
+				width:     'auto',
+				height:    'auto'
 			});
 			anchor.text(text);
 		});
@@ -19,24 +19,30 @@
 		return false;
 	});
 
-	$('a.confirm').click(function() {
+	$('a.chargify-button').hover(
+		function() { $(this).addClass('ui-state-hover'); },
+		function() { $(this).removeClass('ui-state-hover'); }
+	);
+	
+	$('a.chargify-confirm').click(function() {
 		if (!confirm('Are you sure?')) return false;
 	});
 	
-	$('a.showCancelLink').click(function() {
-		$('p.showCancelLink').hide();
-		$('p.cancelLink').show();
+	$('#chargify-show-cancel-link').click(function() {
+		$('#chargify-show-cancel').hide();
+		$('#chargify-do-cancel').show();
 		return false;
 	});
 
-	$('a.changedMind').click(function() {
-		$('p.showCancelLink').show();
-		$('p.cancelLink').hide();
+	$('#chargify-cancel-changed-mind').click(function() {
+		$('#chargify-show-cancel').show();
+		$('#chargify-do-cancel').hide();
 		return false;
 	});
 
-	$('a.cancelLink').click(function() {
-		var msg = 'Are you sure you want to cancel your subscription? You ' +
+	$('#chargify-do-cancel-link').click(function() {
+		var msg =
+			'Are you sure you want to cancel your subscription? You ' +
 			'can re-active it later by visiting this page again.';
 
 		if (!confirm(msg)) {

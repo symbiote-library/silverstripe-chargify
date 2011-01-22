@@ -1,21 +1,18 @@
-#PaymentDetails { padding: 10px 0; border-bottom: 1px solid #CCC; border-top: 1px solid #CCC; }
-#PaymentDetails p { margin: 0; }
-#NextBilling { float: right; color: #666; line-height: 24px; }
-#CreditCard { font-weight: bold; font-size: 13px;
-	background: url(../images/credit-card-24.png) no-repeat;
-	padding-left: 30px; line-height: 24px; }
-#CreditCardDetails dt { font-weight: bold; }
-#CreditCardDetails dd { margin-bottom: 5px; }
-#Products { margin: 10px 0; }
-#Products td { vertical-align: middle; }
-#Products td.name { font-weight: bold; font-size: 16px; text-shadow: 0 0 5px #CCC; }
-#Products a.button { padding: 5px; background: #F4F4F4; border: 1px solid #CCC;
-	font-weight: bold; border-radius: 3px; color: #333; text-decoration: none; }
-#Products a.button:hover { background: #CCC; }
-#CancelSubscription a.cancel { padding: 5px; font-weight: bold; border-radius: 3px;
-	text-decoration: none; background: #FED0D0; border: 1px solid #FF7373; color: #DC1313;
-	margin-right: 10px; }
-#CancelSubscription a.cancel:hover { background: #FF7373; color: #FFF; }
-p.cancelLink { display: none; }
-p.cancelLink strong { margin-right: 10px; }
-#ReactivateSubscription { font-size: 14px; padding: 5px; margin: 10px 0 0 0; font-weight: bold; }
+a.chargify-button { font-weight: bold; text-decoration: none; padding: 5px; }
+a.chargify-button.ui-state-error.ui-state-hover { background: #CD0A0A; color: #FFF; }
+p.chargify-note { font-size: 13px; padding: 5px; margin: 10px 0 0 0; font-weight: bold; }
+
+#chargify-billing-details { padding: 10px 0; border-bottom: 1px solid #CCC; border-top: 1px solid #CCC; }
+#chargify-billing-details p { margin: 0; line-height: 24px; }
+#chargify-next-billing { float: right; color: 666; }
+#chargify-credit-card { font-weight: bold; font-size: 13px; padding-left: 30px; background: url(../images/credit-card-24.png) no-repeat; }
+#chargify-credit-card-details dt { font-weight: bold; }
+#chargify-credit-card-details dd { margin-bottom: 5px; }
+
+#chargify-products { margin: 10px 0; }
+#chargify-products td { vertical-align: middle; }
+#chargify-products td.chargify-products-name { font-weight: bold; font-size: 15px; }
+
+#chargify-do-cancel { display: none; }
+#chargify-do-cancel strong { margin-right: 10px; }
+#chargify-do-cancel-link { margin-right: 5px; }

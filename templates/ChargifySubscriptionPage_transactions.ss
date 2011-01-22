@@ -1,5 +1,5 @@
 <% if Transactions %>
-	<table id="Transactions">
+	<table id="chargify-transactions">
 		<thead>
 			<tr>
 				<th>ID</th>
@@ -24,5 +24,5 @@
 		</tbody>
 	</table>
 <% else %>
-	<p id="NoTransactions" class="ui-state-highlight">No transactions found.</p>
+	<p id="chargify-no-transactions" class="ui-state-highlight">No transactions found.</p>
 <% end_if %>
