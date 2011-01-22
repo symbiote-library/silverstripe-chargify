@@ -21,6 +21,8 @@ class ChargifySubscriptionPage extends Page {
 		'UpgradeType' => 'Prorated'
 	);
 
+	protected $message;
+
 	public function getCMSFields() {
 		$fields = parent::getCMSFields();
 
@@ -161,13 +163,10 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 			);
 		}
 
-		$data = array(
-			'Title'   => 'Subscription Updated',
-			'Content' => '<p>Your subscription has been updated.</p>'
-		);
-		return $this->customise($data)->renderWith(array(
-			'ChargifySubscriptionPage_cancel', 'Page'
-		));
+		Session::set(
+			"ChargifySubscriptionPage.{$this->ID}.message",
+			'Your subscription has been updated.');
+		return $this->redirectBack();
 	}
 
 	/**
@@ -189,13 +188,10 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		$conn = ChargifyService::instance()->getConnector();
 		$conn->cancelSubscription($subscription->id, null);
 
-		$data = array(
-			'Title'   => 'Subscription Canceled',
-			'Content' => '<p>Your subscription has successfully been canceled.</p>'
-		);
-		return $this->customise($data)->renderWith(array(
-			'ChargifySubscriptionPage_cancel', 'Page'
-		));
+		Session::set(
+			"ChargifySubscriptionPage.{$this->ID}.message",
+			'Your subscription has been canceled.');
+		return $this->redirectBack();
 	}
 
 	/**
@@ -217,13 +213,10 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		$connector = ChargifyService::instance()->getConnector();
 		$connector->reactivateSubscription($subscription->id);
 
-		$data = array(
-			'Title'   => 'Subscription Re-activated',
-			'Content' => '<p>Your subscription has been re-activated.</p>'
-		);
-		return $this->customise($data)->renderWith(array(
-			'ChargifySubscriptionPage_cancel', 'Page'
-		));
+		Session::set(
+			"ChargifySubscriptionPage.{$this->ID}.message",
+			'Your subscription has been re-activated.');
+		return $this->redirectBack();
 	}
 
 	/**
@@ -357,6 +350,20 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 	 */
 	public function CancelLink() {
 		return SecurityToken::inst()->addToUrl($this->Link('cancel'));
+	}
+
+	/**
+	 * Loads a message from the session if one is present.
+	 *
+	 * @return string
+	 */
+	public function Message() {
+		if (!$this->message) {
+			$this->message = Session::get("ChargifySubscriptionPage.{$this->ID}.message");
+			Session::clear("ChargifySubscriptionPage.{$this->ID}.message");
+		}
+
+		return $this->message;
 	}
 
 }

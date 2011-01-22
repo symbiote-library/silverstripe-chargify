@@ -29,6 +29,10 @@
 		</div>
 	<% end_if %>
 
+	<% if Message %>
+		<p class="chargify-note ui-state-highlight ui-corner-all">$Message</p>
+	<% end_if %>
+
 	<% if HasActiveSubscription %>
 	<% else %>
 		<% if ChargifySubscription %>
