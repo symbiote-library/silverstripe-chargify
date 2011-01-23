@@ -163,9 +163,10 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 			);
 		}
 
-		Session::set(
-			"ChargifySubscriptionPage.{$this->ID}.message",
-			'Your subscription has been updated.');
+		Session::set("ChargifySubscriptionPage.{$this->ID}", array(
+			'flush'   => true,
+			'message' => 'Your subscription has been updated.'
+		));
 		return $this->redirectBack();
 	}
 
@@ -188,9 +189,10 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		$conn = ChargifyService::instance()->getConnector();
 		$conn->cancelSubscription($subscription->id, null);
 
-		Session::set(
-			"ChargifySubscriptionPage.{$this->ID}.message",
-			'Your subscription has been canceled.');
+		Session::set("ChargifySubscriptionPage.{$this->ID}", array(
+			'flush'   => true,
+			'message' => 'Your subscription has been canceled.'
+		));
 		return $this->redirectBack();
 	}
 
@@ -213,9 +215,10 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		$connector = ChargifyService::instance()->getConnector();
 		$connector->reactivateSubscription($subscription->id);
 
-		Session::set(
-			"ChargifySubscriptionPage.{$this->ID}.message",
-			'Your subscription has been re-activated.');
+		Session::set("ChargifySubscriptionPage.{$this->ID}", array(
+			'flush'   => true,
+			'message' => 'Your subscription has been re-activated.'
+		));
 		return $this->redirectBack();
 	}
 
@@ -239,8 +242,13 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 
 		if (!$link) return $this->subscription = false;
 
-		$conn = ChargifyService::instance()->getConnector();
-		$conn->setCacheExpiry(60);
+		$conn  = ChargifyService::instance()->getConnector();
+
+		if (Session::get("ChargifySubscriptionPage.{$this->ID}.flush")) {
+			Session::clear("ChargifySubscriptionPage.{$this->ID}.flush");
+			$conn->setCacheExpiry(-1);
+		}
+
 		$sub = $conn->getSubscriptionsByID($link->SubscriptionID);
 
 		return $this->subscription = $sub;
