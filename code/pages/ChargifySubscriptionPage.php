@@ -267,6 +267,13 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		$conn = ChargifyService::instance()->getConnector();
 		$conn->cancelSubscription($subscription->id, null);
 
+		// Remove all group relationships.
+		DB::query(sprintf(
+			'DELETE FROM "Group_Members" WHERE "MemberID" = %d ' .
+			'AND "Chargify" = 1 AND "SubscriptionID" = %d',
+			Member::currentUserID(), $subscription->id
+		));
+
 		Session::set("ChargifySubscriptionPage.{$this->ID}", array(
 			'flush'   => true,
 			'message' => 'Your subscription has been canceled.'
