@@ -22,7 +22,7 @@
 				<a href="$Link(creditcard)" class="chargify-dialog" title="Credit Card Details">
 					Show card details.
 				</a>
-				<a href="$UpdateBillingLink" class="chargify-update-billing">
+				<a href="$UpdateBillingLink" class="chargify-update-billing" target="_blank">
 					Update Billing Details.
 				</a>
 			</p>
