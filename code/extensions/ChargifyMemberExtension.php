@@ -41,4 +41,9 @@ class ChargifyMemberExtension extends DataObjectDecorator {
 		}
 	}
 
+	public function updateCMSFields($fields) {
+		$fields->removeByName('ChargifyCustomers');
+		$fields->removeByName('ChargifySubscriptions');
+	}
+
 }
