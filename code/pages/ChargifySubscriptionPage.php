@@ -71,7 +71,7 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 	}
 
 	public function creditcard() {
-		if (!$subscription = $this->getChargifySubscription()) {
+		if (!$subscription = $this->getChargifySubscription(300)) {
 			return $this->httpError(404);
 		}
 
@@ -92,7 +92,7 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 	 * @return array
 	 */
 	public function transactions() {
-		if (!$subscription = $this->getChargifySubscription()) {
+		if (!$subscription = $this->getChargifySubscription(300)) {
 			return $this->httpError(404);
 		}
 
@@ -226,9 +226,10 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 	 * If the current member has a subscription to one of the products attached
 	 * to this page, return it.
 	 *
+	 * @param  int $expiry
 	 * @return ChargifySubscription
 	 */
-	public function getChargifySubscription() {
+	public function getChargifySubscription($expiry = null) {
 		if ($this->subscription !== null) {
 			return $this->subscription;
 		}
@@ -247,6 +248,8 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		if (Session::get("ChargifySubscriptionPage.{$this->ID}.flush")) {
 			Session::clear("ChargifySubscriptionPage.{$this->ID}.flush");
 			$conn->setCacheExpiry(-1);
+		} elseif ($expiry) {
+			$conn->setCacheExpiry($expiry);
 		}
 
 		$sub = $conn->getSubscriptionsByID($link->SubscriptionID);
