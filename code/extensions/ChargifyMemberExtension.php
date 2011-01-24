@@ -31,6 +31,8 @@ class ChargifyMemberExtension extends DataObjectDecorator {
 				));
 			}
 		}
+
+		$this->owner->extend('onAfterChargifySubscribe', $subscription);
 	}
 
 	/**
@@ -45,6 +47,8 @@ class ChargifyMemberExtension extends DataObjectDecorator {
 			'AND "Chargify" = 1 AND "SubscriptionID" = %d',
 			$this->owner->ID, $subscription->id
 		));
+
+		$this->owner->extend('onAfterChargifyUnsubscribe', $subscription);
 	}
 
 	public function onBeforeWrite() {

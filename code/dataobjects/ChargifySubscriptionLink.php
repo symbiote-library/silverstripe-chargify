@@ -15,4 +15,12 @@ class ChargifySubscriptionLink extends DataObject {
 		'Page'    => 'ChargifySubscriptionPage'
 	);
 
+	public function onAfterWrite() {
+		if ($this->isChanged('ID')) {
+			$this->Member()->extend('onAfterChargifySubscriptionCreate', $this);
+		}
+
+		parent::onAfterWrite();
+	}
+
 }

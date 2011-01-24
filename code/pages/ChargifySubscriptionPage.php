@@ -243,6 +243,8 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		Member::currentUser()->chargifyUnsubscribe($subscription);
 		Member::currentUser()->chargifySubscribe($subscription);
 
+		$this->extend('onAfterSubscriptionUpgrade', $subscription);
+
 		Session::set("ChargifySubscriptionPage.{$this->ID}", array(
 			'flush'   => true,
 			'message' => 'Your subscription has been updated.'
@@ -272,6 +274,8 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		// Remove all group relationships.
 		Member::currentUser()->chargifyUnsubscribe($subscription);
 
+		$this->extend('onAfterSubscriptionCancel', $subscription);
+
 		Session::set("ChargifySubscriptionPage.{$this->ID}", array(
 			'flush'   => true,
 			'message' => 'Your subscription has been canceled.'
@@ -299,6 +303,8 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		$subscription = $connector->reactivateSubscription($subscription->id);
 
 		Member::currentUser()->chargifySubscribe($subscription);
+
+		$this->extend('onAfterSubscriptionReactivate', $subscription);
 
 		Session::set("ChargifySubscriptionPage.{$this->ID}", array(
 			'flush'   => true,
