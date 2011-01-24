@@ -25,56 +25,78 @@ class ChargifyWebhookController extends Controller {
 
 		// Handle a new subscription being created.
 		if ($event == 'signup_success') {
-			$cust    = $payload['subscription']['customer']['id'];
-			$custref = $payload['subscription']['customer']['reference'];
-			$sub     = $payload['subscription']['id'];
-			$email   = $payload['subscription']['customer']['email'];
-			$prod    = $payload['subscription']['product']['id'];
+			$subscription = $this->arrayToObject($payload['subscription']);
+			list($memberId, $pageId) = explode('-', $subscription->customer->reference);
 
-			$member = $this->getMember($cust);
-
-			if (!$member) {
-				return $this->httpError(404, 'Member could not be found.');
+			if (!$member = DataObject::get_by_id('Member', $memberId)) {
+				return $this->httpError(404, 'Member not found.');
 			}
 
-			$this->subscribeMember($prod, $sub, $custref, $member);
+			if (!DataObject::get_by_id('ChargifySubscriptionPage', $pageId)) {
+				return $this->httpError(404, 'Subscription page not found.');
+			}
+
+			// Create a customer link if one doesn't exist.
+			$memberLink = DataObject::get_one('ChargifyCustomerLink', sprintf(
+				'"CustomerID" = %d', $subscription->customer->id
+			));
+
+			if (!$memberLink) {
+				$memberLink = new ChargifyCustomerLink();
+				$memberLink->CustomerID = $subscription->customer->id;
+				$memberLink->MemberID   = $memberId;
+				$memberLink->write();
+			}
+
+			// And create a subscription link.
+			$subLink = DataObject::get_one('ChargifySubscriptionLink', sprintf(
+				'"SubscriptionID" = %d', $subscription->id
+			));
+
+			if (!$subLink) {
+				$subLink = new ChargifySubscriptionLink();
+				$subLink->SubscriptionID = $subscription->id;
+				$subLink->MemberID       = $memberId;
+				$subLink->PageID         = $pageId;
+				$subLink->write();
+			}
+
+			// And subscribe the member.
+			$member->chargifySubscribe($subscription);
 		}
 
 		// Handle subscription upgrades or downgrades.
 		if ($event == 'subscription_product_change') {
-			$cust    = $payload['subscription']['customer']['id'];
-			$custref = $payload['subscription']['customer']['reference'];
-			$sub     = $payload['subscription']['id'];
-			$email   = $payload['subscription']['customer']['email'];
-			$prev    = $payload['previous_product']['id'];
-			$curr    = $payload['subscription']['product']['id'];
+			$subscription = $this->arrayToObject($payload['subscription']);
 
-			$member = $this->getMember($cust);
+			$memberLink = DataObject::get_one('ChargifyCustomerLink', sprintf(
+				'"CustomerID" = %d', $subscription->customer->id
+			));
 
-			if (!$member) {
-				return $this->httpError(404, 'Member could not be found.');
+			if (!$memberLink) {
+				return $this->httpError(404, 'Member not found.');
 			}
 
-			$this->unsubscribeMember($prev, $sub, $member);
-			$this->subscribeMember($curr, $sub, $custref, $member);
+			$member = $memberLink->Member();
+			$member->chargifyUnsubscribe($subscription);
+			$member->chargifySubscribe($subscription);
 		}
 
 		// Handle subscriptions ending.
 		if ($event == 'subscription_state_change') {
-			$cust   = $payload['subscription']['customer']['id'];
-			$sub    = $payload['subscription']['id'];
-			$email  = $payload['subscription']['customer']['email'];
-			$prod   = $payload['subscription']['product']['id'];
-			$state  = $payload['subscription']['state'];
+			$subscription = $this->arrayToObject($payload['subscription']);
 
-			if (in_array($state, array('canceled', 'expired', 'suspended'))) {
-				$member = $this->getMember($cust);
+			if (in_array($subscription->state, array('canceled', 'expired', 'suspended'))) {
+				$memberLink = DataObject::get_one('ChargifyCustomerLink', sprintf(
+					'"CustomerID" = %d', $subscription->customer->id
+				));
 
-				if (!$member) {
-					return $this->httpError(404, 'Member could not be found.');
+				if (!$memberLink) {
+					return $this->httpError(404, 'Member not found.');
 				}
 
-				$this->unsubscribeMember($prod, $sub, $member);
+				$member = $memberLink->Member();
+				$member->chargifyUnsubscribe($subscription);
 			}
 		}
 
@@ -82,66 +104,17 @@ class ChargifyWebhookController extends Controller {
 	}
 
 	/**
-	 * Adds a member to the groups linked to a Chargify product.
+	 * Recursively converts an array to an object.
 	 *
-	 * @param int $product
-	 * @param int $subscription
-	 * @param string $custref
-	 * @param Member $member
+	 * @param  array $array
+	 * @return object
 	 */
-	protected function subscribeMember($product, $subscription, $custref, Member $member) {
-		$groups = DataObject::get('Group', sprintf(
-			'"ChargifyProductID" = %d', $product
-		));
-
-		if ($groups) foreach ($groups as $group) {
-			$member->Groups()->add($group, array(
-				'Chargify'       => true,
-				'SubscriptionID' => $subscription
-			));
+	public function arrayToObject(array $array) {
+		foreach ($array as &$value) {
+			if (is_array($value)) $value = (object) $value;
 		}
 
-		$link = new ChargifySubscriptionLink();
-		$link->SubscriptionID = $subscription;
-		$link->MemberID       = $member->ID;
-		$link->PageID         = substr($custref, strpos($custref, '-') + 1);
-		$link->write();
-	}
-
-	/**
-	 * Removes a member from the groups linked to a Chargify product.
-	 *
-	 * @param int $product
-	 * @param int $subscription
-	 * @param Member $member
-	 */
-	protected function unsubscribeMember($product, $subscription, Member $member) {
-		$groups = $member->getManyManyComponents('Groups', sprintf(
-			'"ChargifyProductID" = %d ' .
-			'AND "Group_Members"."Chargify" = 1 ' .
-			'AND "Group_Members"."SubscriptionID" = %d',
-			$product, $subscription
-		));
-
-		if (count($groups)) {
-			$member->Groups()->removeMany($groups->map('ID', 'ID'));
-		}
-	}
-
-	/**
-	 * Returns the {@link Member} object for a chargify customer ID.
-	 *
-	 * @param  int $id
-	 * @return Member
-	 */
-	protected function getMember($id) {
-		$link = DataObject::get_one('ChargifyCustomerLink', sprintf(
-			'"CustomerID" = %d', $id
-		));
-
-		if ($link) {
-			return $link->Member();
-		}
+		return (object) $array;
 	}
 
 }
