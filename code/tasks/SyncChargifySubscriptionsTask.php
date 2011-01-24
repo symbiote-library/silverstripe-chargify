@@ -61,21 +61,9 @@ class SyncChargifySubscriptionsTask extends BuildTask {
 			if (!$link) return;
 			$member = $link->Member();
 
-			$groups = DataObject::get('Group', sprintf(
-				'"ChargifyProductID" = %d', $subscription->product->id
-			));
+			$result = 'subscribed';
 
-			$result = null;
-
-			if ($groups) foreach ($groups as $group) {
-				if (!$member->inGroup($group)) {
-					$member->Groups()->add($group, array(
-						'Chargify'       => true,
-						'SubscriptionID' => $id
-					));
-					$result = 'subscribed';
-				}
-			}
+			$member->chargifySubscribe($subscription);
 
 			$link = DataObject::get_one('ChargifySubscriptionLink', sprintf(
 				'"SubscriptionID" = %d', $id

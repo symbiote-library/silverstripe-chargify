@@ -184,19 +184,7 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		$subscriptionLink->write();
 
 		// And add the member to the groups.
-		$groups = DataObject::get('Group', sprintf(
-			'"ChargifyProductID" = %d', $subscription->product->id
-		));
-
-		$member = Member::currentUser();
-		if ($groups) foreach ($groups as $group) {
-			if (!$member->inGroup($group)) {
-				$member->Groups()->add($group, array(
-					'Chargify'       => true,
-					'SubscriptionID' => $subscription->id
-				));
-			}
-		}
+		Member::currentUser()->chargifySubscribe($subscription);
 
 		Session::set("ChargifySubscriptionPage.{$this->ID}", array(
 			'flush'   => true,
@@ -268,11 +256,7 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		$conn->cancelSubscription($subscription->id, null);
 
 		// Remove all group relationships.
-		DB::query(sprintf(
-			'DELETE FROM "Group_Members" WHERE "MemberID" = %d ' .
-			'AND "Chargify" = 1 AND "SubscriptionID" = %d',
-			Member::currentUserID(), $subscription->id
-		));
+		Member::currentUser()->chargifyUnsubscribe($subscription);
 
 		Session::set("ChargifySubscriptionPage.{$this->ID}", array(
 			'flush'   => true,
@@ -300,19 +284,7 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		$connector    = ChargifyService::instance()->getConnector();
 		$subscription = $connector->reactivateSubscription($subscription->id);
 
-		$groups = DataObject::get('Group', sprintf(
-			'"ChargifyProductID" = %d', $subscription->product->id
-		));
-		$member = Member::currentUser();
-
-		if ($groups) foreach ($groups as $group) {
-			if (!$member->inGroup($group)) {
-				$member->Groups()->add($group, array(
-					'Chargify'       => true,
-					'SubscriptionID' => $subscription->id
-				));
-			}
-		}
+		Member::currentUser()->chargifySubscribe($subscription);
 
 		Session::set("ChargifySubscriptionPage.{$this->ID}", array(
 			'flush'   => true,
