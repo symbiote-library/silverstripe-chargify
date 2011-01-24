@@ -11,7 +11,7 @@ class SyncChargifySubscriptionsTask extends BuildTask {
 	protected $description = 'Syncs the Chargify subscription to group linking.';
 
 	public function run($request) {
-		$subscribed = $deleted = 0;
+		$synced = $deleted = 0;
 
 		// Ensure we have an uncached connector.
 		$connector = ChargifyService::instance()->getConnector();
@@ -26,15 +26,15 @@ class SyncChargifySubscriptionsTask extends BuildTask {
 			foreach ($subs as $subscription) {
 				$result = $this->processSubscription($subscription);
 
-				if ($result == 'subscribed') {
-					$subscribed++;
+				if ($result == 'synced') {
+					$synced++;
 				} elseif ($result == 'deleted') {
 					$deleted++;
 				}
 			}
 		}
 
-		echo "Subscribed $subscribed members and removed $deleted subscriptions.\n";
+		echo "Synced $synced and removed $deleted subscriptions.\n";
 	}
 
 	/**
@@ -42,46 +42,41 @@ class SyncChargifySubscriptionsTask extends BuildTask {
 	 * @return string
 	 */
 	protected function processSubscription($subscription) {
-		$id      = $subscription->id;
-		$state   = $subscription->state;
-		$custref = $subscription->customer->reference;
+		$memberLink = DataObject::get_one('ChargifyCustomerLink', sprintf(
+			'"CustomerID" = %d', $subscription->customer->id
+		));
 
-		if (in_array($state, array('canceled', 'unpaid', 'expired'))) {
-			DB::query(sprintf(
-				'DELETE FROM "Group_Members" WHERE "Chargify" = 1 AND "SubscriptionID" = %d',
-				$id
-			));
+		if ($memberLink) {
+			$member = $memberLink->Member();
+		} else {
+			return;
+		}
 
+		if (in_array($subscription->state, array('canceled', 'unpaid', 'expired'))) {
+			$member->chargifyUnsubscribe($subscription);
 			return 'deleted';
 		} else {
-			$link = DataObject::get_one('ChargifyCustomerLink', sprintf(
-				'"CustomerID" = %d', $subscription->customer->id
+			// Create a subscription link if we don't have one.
+			$subLink = DataObject::get_one('ChargifySubscriptionLink', sprintf(
+				'"SubscriptionID" = %d', $subscription->id
 			));
 
-			if (!$link) return;
-			$member = $link->Member();
+			if (!$subLink) {
+				$reference = $subscription->customer->reference;
+				$pageId    = substr($reference, strpos($reference, '-') + 1);
 
-			$result = 'subscribed';
-
-			$member->chargifySubscribe($subscription);
-
-			$link = DataObject::get_one('ChargifySubscriptionLink', sprintf(
-				'"SubscriptionID" = %d', $id
-			));
-
-			if (!$link) {
-				$link = new ChargifySubscriptionLink();
-				$link->SubscriptionID = $id;
-				$link->MemberID = $member->ID;
-				$link->PageID = substr(
-					$custref, strpos($custref, '-') + 1
-				);
-				$link->write();
-
-				$result = true;
+				$subLink = new ChargifySubscriptionLink();
+				$subLink->SubscriptionID = $subscription->id;
+				$subLink->MemberID       = $member->ID;
+				$subLink->PageID         = $pageId;
+				$subLink->write();
 			}
 
-			return $result;
+			// First remove the user from all groups, then re-add them.
+			$member->chargifyUnsubscribe($subscription);
+			$member->chargifySubscribe($subscription);
+
+			return 'synced';
 		}
 	}
 
