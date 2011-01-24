@@ -40,7 +40,18 @@ class ChargifySubscriptionPage extends Page {
 			new CheckboxField('UpgradeIncludeTrial',
 				'Include initial trial in prorated upgrade?'),
 			new CheckboxField('UpgradeInitialCharge',
-				'Include initial charges in prorated upgrade?')
+				'Include initial charges in prorated upgrade?'),
+			new HeaderField('ReturnUrlHeader', 'Return URL'),
+			new LiteralField('ReturnUrlNote', sprintf('<p>In order for the '     .
+				'user to be returned to this subscription page when they have '  .
+				'signed up, and have their subscription immediately activated, ' .
+				'you must set the "Return URL after successful transaction" to ' .
+				'"%s", and the "Return parameters" to "%s" via the '             .
+				'<a href="%s">Chargify admin panel</a>. This must be set for '   .
+				'each product the user can subscribe to.</p>',
+				$this->AbsoluteLink('aftersignup'),
+				'subscription_id={subscription_id}',
+				Controller::join_links(ChargifyConfig::get_url(), 'dashboard')))
 		));
 
 		return $fields;
