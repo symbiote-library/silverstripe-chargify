@@ -13,6 +13,40 @@ class ChargifyMemberExtension extends DataObjectDecorator {
 		));
 	}
 
+	/**
+	 * Links this member to the groups linked to a subscription product.
+	 *
+	 * @param ChargifySubscription $subscription
+	 */
+	public function chargifySubscribe(ChargifySubscription $subscription) {
+		$groups = DataObject::get('Group', sprintf(
+			'"ChargifyProductID" = %d', $subscription->product->id
+		));
+
+		if ($groups) foreach ($groups as $group) {
+			if (!$this->owner->inGroup($group)) {
+				$this->owner->Groups()->add($group, array(
+					'Chargify'       => true,
+					'SubscriptionID' => $subscription->id
+				));
+			}
+		}
+	}
+
+	/**
+	 * Removes this member from any groups they have been added to by a chargify
+	 * subscription.
+	 *
+	 * @param ChargifySubscription $subscription
+	 */
+	public function chargifyUnsubscribe(ChargifySubsciption $subscription) {
+		DB::query(sprintf(
+			'DELETE FROM "Group_Members" WHERE "MemberID" = %d ' .
+			'AND "Chargify" = 1 AND "SubscriptionID" = %d',
+			$this->owner->ID, $subscription->id
+		));
+	}
+
 	public function onBeforeWrite() {
 		if (!count($this->owner->ChargifyCustomers())) return;
 
