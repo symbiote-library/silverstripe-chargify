@@ -61,7 +61,7 @@ class ChargifyProductSetField extends FormField {
 	 * @return string
 	 */
 	public function ManageLink() {
-		return Controller::join_links(ChargifyConfig::get_url(), 'dashboard');
+		return Controller::join_links(ChargifyConfig::get_url(), 'products');
 	}
 
 }

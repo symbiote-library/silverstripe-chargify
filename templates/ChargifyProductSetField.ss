@@ -1,12 +1,8 @@
-<% require javascript(sapphire/thirdparty/jquery/jquery.js) %>
-<% require javascript(chargify/javascript/ChargifyProductSetField.js) %>
 <% require css(chargify/css/ChargifyProductSetField.css) %>
 
 <div id="$ID" class="$CSSClasses field">
-	<p class="chargifyLink">
-		You can manage available subscription types at <a href="$ManageLink" target="_blank">Chargify</a>.
-	</p>
-	<h3>$Title</h3>
+	<h2>$Title</h2>
+	<p>You can manage available subscription types at <a href="$ManageLink" target="_blank">Chargify</a>.</p>
 	<% control Products.GroupedBy(Family) %>
 		<h4>$Family</h4>
 		<table>

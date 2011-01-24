@@ -28,7 +28,7 @@ class ChargifySubscriptionPage extends Page {
 
 		$fields->addFieldToTab('Root.Content', new Tab('Subscriptions'), 'Metadata');
 		$fields->addFieldToTab('Root.Content.Subscriptions', new ChargifyProductSetField(
-			'Products', 'Available Subscription Types'
+			'Products', 'Subscription Types'
 		));
 
 		$fields->addFieldsToTab('Root.Content.Advanced', array(
