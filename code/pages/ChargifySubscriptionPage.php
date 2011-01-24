@@ -219,15 +219,18 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 		$product = $connector->getProductByID($product);
 
 		if ($this->UpgradeType == 'Simple') {
-			$connector->updateSubscriptionProduct($subscription->id, $product);
+			$subscription = $connector->updateSubscriptionProduct($subscription->id, $product);
 		} else {
-			$connector->updateSubscriptionProductProrated(
+			$subscription = $connector->updateSubscriptionProductProrated(
 				$subscription->id,
 				$product,
 				$this->UpgradeIncludeTrial,
 				$this->UpgradeInitialCharge
 			);
 		}
+
+		Member::currentUser()->chargifyUnsubscribe($subscription);
+		Member::currentUser()->chargifySubscribe($subscription);
 
 		Session::set("ChargifySubscriptionPage.{$this->ID}", array(
 			'flush'   => true,
