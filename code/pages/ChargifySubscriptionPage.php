@@ -297,8 +297,22 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 			return $this->httpError(404);
 		}
 
-		$connector = ChargifyService::instance()->getConnector();
-		$connector->reactivateSubscription($subscription->id);
+		$connector    = ChargifyService::instance()->getConnector();
+		$subscription = $connector->reactivateSubscription($subscription->id);
+
+		$groups = DataObject::get('Group', sprintf(
+			'"ChargifyProductID" = %d', $subscription->product->id
+		));
+		$member = Member::currentUser();
+
+		if ($groups) foreach ($groups as $group) {
+			if (!$member->inGroup($group)) {
+				$member->Groups()->add($group, array(
+					'Chargify'       => true,
+					'SubscriptionID' => $subscription->id
+				));
+			}
+		}
 
 		Session::set("ChargifySubscriptionPage.{$this->ID}", array(
 			'flush'   => true,
