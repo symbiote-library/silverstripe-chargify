@@ -16,9 +16,9 @@ class ChargifyMemberExtension extends DataObjectDecorator {
 	/**
 	 * Links this member to the groups linked to a subscription product.
 	 *
-	 * @param ChargifySubscription $subscription
+	 * @param object $subscription
 	 */
-	public function chargifySubscribe(ChargifySubscription $subscription) {
+	public function chargifySubscribe($subscription) {
 		$groups = DataObject::get('Group', sprintf(
 			'"ChargifyProductID" = %d', $subscription->product->id
 		));
@@ -37,9 +37,9 @@ class ChargifyMemberExtension extends DataObjectDecorator {
 	 * Removes this member from any groups they have been added to by a chargify
 	 * subscription.
 	 *
-	 * @param ChargifySubscription $subscription
+	 * @param object $subscription
 	 */
-	public function chargifyUnsubscribe(ChargifySubsciption $subscription) {
+	public function chargifyUnsubscribe($subscription) {
 		DB::query(sprintf(
 			'DELETE FROM "Group_Members" WHERE "MemberID" = %d ' .
 			'AND "Chargify" = 1 AND "SubscriptionID" = %d',
