@@ -82,6 +82,34 @@ class ChargifyMemberExtension extends DataObjectDecorator {
 	public function updateCMSFields($fields) {
 		$fields->removeByName('ChargifyCustomers');
 		$fields->removeByName('ChargifySubscriptions');
+
+		$filter = sprintf('"MemberID" = %d', $this->owner->ID);
+		$base   = ChargifyConfig::get_url();
+		$link   = '<a href=\\"' . $base . '%1$s/$%2$s\\" target=\\"_blank\\">$%2$s</a>';
+
+		$customers = new TableListField('ChargifyCustomers', 'ChargifyCustomerLink', array(
+			'CustomerID' => 'Customer ID'
+		), $filter);
+		$customers->setFieldFormatting(array(
+			'CustomerID' => sprintf($link, 'customers', 'CustomerID')
+		));
+		$customers = $customers->performReadonlyTransformation();
+
+		$subscriptions = new TableListField('ChargifySubscriptions', 'ChargifySubscriptionLink', array(
+			'SubscriptionID' => 'Subscription ID',
+			'PageID'         => 'Subscription Page ID'
+		), $filter);
+		$subscriptions->setFieldFormatting(array(
+			'SubscriptionID' => sprintf($link, 'subscriptions', 'SubscriptionID')
+		));
+		$subscriptions = $subscriptions->performReadonlyTransformation();
+
+		$fields->addFieldsToTab('Root.Chargify', array(
+			new HeaderField('LinkedCustomersHeader', 'Linked Customers'),
+			$customers,
+			new HeaderField('SubscriptionsHeader', 'Subscriptions'),
+			$subscriptions
+		));
 	}
 
 }
