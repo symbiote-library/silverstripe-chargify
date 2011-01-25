@@ -11,7 +11,7 @@ class SyncChargifyMembersTask extends BuildTask {
 		databases, so each Member is linked to a Chargify customer.';
 
 	public function run($request) {
-		$synced = 0;
+		$synced = $invalid = 0;
 
 		// Ensure we have an uncached connector.
 		$connector = ChargifyService::instance()->getConnector();
@@ -24,13 +24,17 @@ class SyncChargifyMembersTask extends BuildTask {
 			}
 
 			foreach ($customers as $customer) {
-				if ($result = $this->processCustomer($customer, $connector)) {
+				$result = $this->processCustomer($customer, $connector);
+
+				if ($result == 'updated') {
 					$synced++;
+				} elseif ($result == 'invalid') {
+					$invalid++;
 				}
 			}
 		}
 
-		echo "Synced $synced members.\n";
+		echo "Synced $synced members, and skipped $invalid invalid customers.\n";
 	}
 
 	/**
@@ -45,12 +49,16 @@ class SyncChargifyMembersTask extends BuildTask {
 		$updated = false;
 
 		// Attempt to find the member by ID. The reference is in the format
-		// {Member ID}-{Page ID}
+		// {Member ID}-{Page ID}-{Token}
 		if ($ref = $customer->reference) {
-			$id     = substr($ref, 0, strpos($ref, '-'));;
-			$member = DataObject::get_by_id('Member', $id);
+			list($memberId, $pageId, $token) = explode('-', $ref);
+			$member = DataObject::get_by_id('Member', $memberId);
 		} else {
 			return;
+		}
+
+		if ($token != ChargifyService::instance()->generateToken($memberId, $pageId)) {
+			return 'invalid';
 		}
 
 		if (!$member) return;
@@ -103,7 +111,7 @@ class SyncChargifyMembersTask extends BuildTask {
 			}
 		}
 
-		return $updated;
+		return $updated ? 'updated' : false;
 	}
 
 }

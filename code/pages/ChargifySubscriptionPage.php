@@ -145,11 +145,8 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 	public function aftersignup($request) {
 		$id = $request->getVar('subscription_id');
 
-		if (!ctype_digit($id)) {
-			return $this->httpError(400, 'No subscription ID.');
-		}
-
-		$conn = ChargifyService::instance()->getConnector();
+		$srv  = ChargifyService::instance();
+		$conn = $srv->getConnector();
 		$conn->setCacheExpiry(-1);
 
 		if (!$subscription = $conn->getSubscriptionsByID($id)) {
@@ -165,17 +162,21 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 			return $this->httpError(404, 'The subscription has already been activated.');
 		}
 
-		// Ensure the page ID and member ID are the current ones.
-		list($memberId, $pageId) = explode('-', $subscription->customer->reference);
+		// Ensure the member ID and page ID are the same, and that the token
+		// is the same as well.
+		list($memberId, $pageId, $token) = explode('-', $subscription->customer->reference);
 
-		if ($memberId != Member::currentUserID()) {
-			return $this->httpError(403, 'Incorrect member ID');
+		$isValid = (
+			$memberId  == Member::currentUserID()
+			&& $pageId == $this->ID
+			&& $token  == $srv->generateToken($memberId, $pageId)
+		);
+
+		if (!$isValid) {
+			return $this->httpError(400, 'Invalid reference value.');
 		}
 
-		if ($pageId != $this->ID) {
-			return $this->httpError(403, 'Incorrect page ID.');
-		}
-
+		// Create a member link if one doesn't exist.
 		$memberLink = DataObject::get_one('ChargifyCustomerLink', sprintf(
 			'"CustomerID" = %d', $subscription->customer->id
 		));
@@ -391,6 +392,10 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 						$data->setField('ActionConfirm', true);
 					}
 				} else {
+					$reference = implode('-', array(
+						$member->ID, $this->ID, $service->generateToken($member->ID, $this->ID)
+					));
+
 					$link = Controller::join_links(
 						ChargifyConfig::get_url(),
 						'h', $product->id,
@@ -398,7 +403,7 @@ class ChargifySubscriptionPage_Controller extends Page_Controller {
 						'?first_name=' . urlencode($member->FirstName),
 						'?last_name='  . urlencode($member->Surname),
 						'?email='      . urlencode($member->Email),
-						'?reference='  . urlencode("{$member->ID}-{$this->ID}")
+						'?reference='  . urlencode($reference)
 					);
 
 					$data->setField('ActionTitle', 'Subscribe');

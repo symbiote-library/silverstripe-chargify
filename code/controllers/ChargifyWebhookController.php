@@ -26,7 +26,8 @@ class ChargifyWebhookController extends Controller {
 		// Handle a new subscription being created.
 		if ($event == 'signup_success') {
 			$subscription = $this->arrayToObject($payload['subscription']);
-			list($memberId, $pageId) = explode('-', $subscription->customer->reference);
+			list($memberId, $pageId, $token) = explode(
+				'-', $subscription->customer->reference);
 
 			if (!$member = DataObject::get_by_id('Member', $memberId)) {
 				return $this->httpError(404, 'Member not found.');
@@ -34,6 +35,10 @@ class ChargifyWebhookController extends Controller {
 
 			if (!DataObject::get_by_id('ChargifySubscriptionPage', $pageId)) {
 				return $this->httpError(404, 'Subscription page not found.');
+			}
+
+			if ($token != ChargifyService::instance()->generateToken($memberId, $pageId)) {
+				return $this->httpError(400, 'Invalid token value.');
 			}
 
 			// Create a customer link if one doesn't exist.
