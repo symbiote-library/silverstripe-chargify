@@ -65,4 +65,18 @@ class ChargifyService {
 		));
 	}
 
+	/**
+	 * Generates a chargify-style token from the passed parameters and the site
+	 * shared key.
+	 *
+	 * @param  mixed $params,...
+	 * @return string
+	 */
+	public function generateToken() {
+		$key  = ChargifyConfig::get_shared_key();
+		$vals = implode('--', func_get_args());
+
+		return substr(sha1("$vals--$key"), 0, 10);
+	}
+
 }
