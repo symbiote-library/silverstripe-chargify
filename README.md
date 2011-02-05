@@ -8,6 +8,9 @@ a subscription page where a Member can sign up for a subscription. When the
 subscription is successfuly created, they are added to the groups that the
 product they signed up for is linked to.
 
+## Installation Instructions
+See docs/en/index.md.
+
 ## Maintainer Contacts
 *  Andrew Short (<andrew@silverstripe.com.au>)
 
