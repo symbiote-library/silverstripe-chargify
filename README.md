@@ -1,3 +1,7 @@
+> ## **IMPORTANT**
+
+> This module is no longer maintained, however if you would like to step forward and do so, please let us know.
+
 # SilverStripe Chargify Module
 
 The Chargify module integrates your SilverStripe site with Chargify for
