@@ -16,7 +16,7 @@ product they signed up for is linked to.
 See docs/en/index.md.
 
 ## Maintainer Contacts
-*  Marcus Nyeholt (<marcus@silverstripe.com.au>)
+*  Marcus Nyeholt (<marcus@symbiote.com.au>)
 
 ## Requirements
 *  SilverStripe 2.4+
